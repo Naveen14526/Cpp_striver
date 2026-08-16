@@ -2602,6 +2602,118 @@ int LeastCntSqStr(string s,string t){
     return prev[m];
 }
 
+long long numDistinct(string s,string t){
+    int n=s.size();
+    int m=t.size();
+    vector<long long> dp(m+1,0);
+    dp[0]=1;
+    for(int i=1;i<=n;i++){
+        for(int j=m;j>=1;j--){
+            if(s[i-1]==t[j-1]) dp[j]=dp[j-1]+dp[j];
+        }
+    }
+    return dp[m];
+}
+
+int editDist(string s,string t){
+    int n=s.size();
+    int m=t.size();
+    vector<int> prev(m+1,0),cur(m+1,0);
+    for(int j=0;j<=m;j++) prev[j]=j;
+    for(int i=1;i<=n;i++){
+        cur[0]=i;
+        for(int j=1;j<=m;j++){
+            if(s[i-1]==t[j-1]) cur[j]=prev[j-1];
+            else cur[j]=1+min(prev[j],min(cur[j-1],prev[j-1]));
+        }
+        prev=cur;
+    }
+    return prev[m];
+}
+
+bool WildCardMatch(string s,string t){
+    int n=s.size();
+    int m=t.size();
+    vector<bool> prev(m+1,false),cur(m+1,false);
+    prev[0]=true;
+    for(int i=1;i<=n;i++){
+        bool flag=true;
+        for(int j=1;j<=i;j++){
+            if(s[j-1]!='*'){
+                flag=false;
+                break;
+            }
+        }
+        cur[0]=flag;
+        for(int j=1;j<=m;j++){
+            if(s[i-1]==t[j-1]||s[i-1]=='?') cur[j]=prev[j-1];
+            else if(s[i-1]=='*') cur[j]=prev[j]||cur[j-1];
+            else cur[j]=false;
+        }
+        prev=cur;
+    }
+    return prev[m];
+}
+
+long getMaxProfit(long *values,int n){
+    vector<long> ahead(2,0),cur(2,0);
+    ahead[0]=ahead[1]=0;
+    for(int ind=n-1;ind>=0;ind--){
+        for(int buy=0;buy<=1;buy++){
+            long profit=0;
+            if(buy) profit=max(-values[ind]+ahead[0],0+ahead[1]);
+            else profit=max(values[ind]+ahead[1],0+ahead[0]);
+            cur[buy]=profit;
+        }
+        ahead=cur;
+    }
+    return ahead[1];
+}
+
+int MaxProfitWithKTransac(vector<int> &prices,int n,int k){
+    vector<vector<int>> after(2,vector<int>(k+1,0)),cur(2,vector<int>(k+1,0));
+    for(int ind=n-1;ind>=0;ind--){
+        for(int buy=0;buy<=1;buy++){
+            for(int cap=1;cap<=k;cap++){
+                if(buy==1) cur[buy][cap]=max(-prices[ind]+after[0][cap],0+after[1][cap]);
+                else cur[buy][cap]=max(prices[ind]+after[1][cap],0+after[0][cap]);
+            }
+        }
+        after=cur;
+    }
+    return after[1][k];
+}
+
+int MaxProfitWithCoolDown(vector<int> &prices){
+    int n=prices.size();
+    vector<int> front1(2,0),front2(2,0),cur(2,0);
+    for(int ind=n-1;ind>=0;ind--){
+        cur[1]=max(-prices[ind]+front1[0],0+front1[1]);
+        cur[0]=max(prices[ind]+front2[1],0+front1[0]);
+        front2=front1;
+        front1=cur;
+    }
+    return front1[1];
+}
+
+int LongestIncreasingSubSequence(int arr[],int n){
+    vector<int> temp;
+    temp.push_back(arr[0]);
+    int len=1;
+    for(int i=1;i<n;i++){
+        if(arr[i]>temp.back()){
+            temp.push_back(arr[i]);
+            len++;
+        }
+        else{
+            int ind=lower_bound(temp.begin(),temp.end(),arr[i])-temp.begin();
+            temp[ind]=arr[i];
+        }
+    }
+    return len;
+}
+
+
 /*int main(){
     TreeNode* root = new TreeNode(1);
     root->left = new TreeNode(2);
