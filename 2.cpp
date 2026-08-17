@@ -2713,6 +2713,192 @@ int LongestIncreasingSubSequence(int arr[],int n){
     return len;
 }
 
+vector<int> DivisibleSet(vector<int>& arr){
+    int n=arr.size();
+    vector<int> dp(n,1),hash(n);
+    int maxi=1;
+    int lastIndex=0;
+    sort(arr.begin(),arr.end());
+    for(int i=0;i<n;i++){
+        hash[i]=i;
+        for(int prev=0;prev<i;prev++){
+            if(arr[i]%arr[prev]==0&&1+dp[prev]>dp[i]){
+                dp[i]=1+dp[prev];
+                hash[i]=prev;
+            }
+        }
+        if(dp[i]>maxi){
+            maxi=dp[i];
+            lastIndex=i;
+        }
+    }
+    vector<int> temp;
+    temp.push_back(arr[lastIndex]);
+    while(hash[lastIndex]!=lastIndex){
+        lastIndex=hash[lastIndex];
+        temp.push_back(arr[lastIndex]);
+    }
+    reverse(temp.begin(),temp.end());
+    return temp;
+}
+
+bool CheckPossibleStr(string &s,string &t){
+    if(s.size()!=t.size()+1) return false;
+    int first=0,second=0;
+    while(first<s.size()&&second<t.size()){
+        if(s[first]==t[second]){
+            first++;
+            second++;
+        }
+        else first++;
+    }
+    if(first==s.size()&&second==t.size()) return true;
+    return false;
+}
+bool comp(string &s,string &t){
+    return s.size()<t.size();
+}
+int LongestStrChain(vector<string> &arr){
+    sort(arr.begin(),arr.end(),comp);
+    int n=arr.size();
+    vector<int> dp(n,1);
+    int maxi=1;
+    for(int i=0;i<n;i++){
+        for(int prev=0;prev<i;prev++){
+            if(CheckPossibleStr(arr[i],arr[prev])&&1+dp[prev]>dp[i]) dp[i]=1+dp[prev];
+        }
+        if(dp[i]>maxi) maxi=dp[i];
+    }
+    return maxi;
+}
+
+int LongestBitonicSeq(vector<int>& arr,int n){
+    vector<int> dp1(n,1),dp2(n,1);
+    int maxi=0;
+    for(int i=0;i<n;i++){
+        for(int prev=0;prev<i;prev++){
+            if(arr[prev]<arr[i]&&1+dp1[prev]>dp1[i]) dp1[i]=1+dp1[prev];
+        }
+    }
+    for(int i=n-1;i>=0;i--){
+        for(int prev=n-1;prev>i;prev--){
+            if(arr[prev]<arr[i]&&1+dp2[prev]>dp2[i]) dp2[i]=1+dp2[prev];
+        }
+        maxi=max(maxi,dp1[i]+dp2[i]-1);
+    }
+    return maxi;
+}
+
+int MultiplicationMatrix(vector<int> &arr,int n){
+    int dp[n][n];
+    for(int i=0;i<n;i++) dp[i][i]=0;
+    for(int i=n-1;i>=1;i--){
+        for(int j=i+1;j<n;j++){
+            int mini=1e9;
+            for(int k=i;k<j;k++){
+                int steps=arr[i-1]*arr[k]*arr[j]+dp[i][k]+dp[k+1][j];
+                mini=min(mini,steps);
+            }
+            dp[i][j]=mini;
+        }
+    }
+    return dp[1][n-1];
+}
+
+int CostOfCut(int n,int c,vector<int> &cuts){
+    cuts.push_back(n);
+    cuts.insert(cuts.begin(),0);
+    vector<vector<int>> dp(c+2,vector<int> (c+2,0));
+    sort(cuts.begin(),cuts.end());
+    for(int i=c;i>=1;i--){
+        for(int j=1;j<=c;j++){
+            if(i>j) continue;
+            int mini=INT_MAX;
+            for(int ind=i;ind<=j;ind++){
+                int cost=cuts[j+1]-cuts[i-1]+dp[i][ind-1]+dp[ind+1][j];
+                mini=min(mini,cost);
+            }
+            dp[i][j]=mini;
+        }
+    }
+    return dp[1][c];
+}
+
+long long funcBool(int i,int j,int isTrue,string &exp,vector<vector<vector<ll>>>& dp){
+    if(i>j) return 0;
+    if(i==j){
+        if(isTrue) return exp[i]=='T';
+        else return exp[i]=='F';
+    }
+    if(dp[i][j][isTrue]!=-1) return dp[i][j][isTrue];
+    ll ways=0;
+    for(int ind=i+1;ind<=j;ind+=2){
+        ll lT=funcBool(i,ind-1,1,exp,dp);
+        ll lF=funcBool(i,ind-1,0,exp,dp);
+        ll rT=funcBool(ind+1,j,1,exp,dp);
+        ll rF=funcBool(ind+1,j,0,exp,dp);
+        if(exp[ind]=='&'){
+            if(isTrue) ways=(ways+(lT*rT)%mod)%mod;
+            else ways=(ways+(lT*rF)%mod+(lF*rF)%mod+(lF*rT)%mod)%mod;
+        }
+        else if(exp[ind]=='|'){
+            if(isTrue) ways=(ways+(lT*rT)%mod+(lT*rF)%mod+(lF*rT)%mod)%mod;
+            else ways=(ways+(lF*rF)%mod)%mod;
+        }
+        else{
+            if(isTrue) ways=(ways+(lT*rF)%mod+(lF*rT)%mod)%mod;
+            else ways=(ways+(lT*rT)%mod+(lF*rF)%mod)%mod;
+        }
+    }
+    return dp[i][j][isTrue]=ways;
+}
+int evaluateExp(string& exp){
+    int n=exp.size();
+    vector<vector<vector<ll>>> dp(n,vector<vector<ll>> (n,vector<ll>(2,-1)));
+    return funcBool(0,n-1,1,exp,dp);
+}
+
+bool isPalindrome(int i,int j,string s){
+    while(i<j){
+        if(s[i]!=s[j]) return false;
+        i++;
+        j--;
+    }
+    return true;
+}
+int palindromePartitioning(string str){
+    int n=str.size();
+    vector<int> dp(n+1,0);
+    for(int i=n-1;i>=0;i--){
+        int minCost=INT_MAX;
+        for(int j=i;j<n;j++){
+            if(isPalindrome(i,j,str)){
+                int cost=1+dp[j+1];
+                minCost=min(minCost,cost);
+            }
+        }
+        dp[i]=minCost;
+    }
+    return dp[0]-1;
+}
+
+int MaximumSumSubarr(vector<int>& num,int k){
+    int n=num.size();
+    vector<int> dp(n+1,0);
+    for(int ind=n-1;ind>=0;ind--){
+        int len=0;
+        int maxi=INT_MIN;
+        int maxAns=INT_MIN;
+        for(int j=ind;j<min(n,ind+k);j++){
+            len++;
+            maxi=max(maxi,num[j]);
+            int sum=len*maxi+dp[j+1];
+            maxAns=max(maxAns,sum);
+        }
+        dp[ind]=maxAns;
+    }
+    return dp[0];
+}
 
 /*int main(){
     TreeNode* root = new TreeNode(1);
